@@ -6,5 +6,6 @@ beautifulsoup4
 langchain-community
 faiss-cpu
 langchain-core
-langchain
 langchain-classic
+streamlit
+langchain_groq
