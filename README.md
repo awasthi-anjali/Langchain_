@@ -1,4 +1,5 @@
-Conversational AI with LangChain, Groq, and Message History
+## Conversational AI with LangChain, Groq, and Message History
+
 Overview
 This project demonstrates how to build a stateful conversational AI using LangChain and Groq LLMs.
 It covers prompt design, message history handling, multi-session memory, language control, and context trimming for long conversations.
