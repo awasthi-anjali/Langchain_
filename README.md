@@ -1,4 +1,6 @@
-## Conversational AI with LangChain, Groq, and Message History
+## Chatbot docs:
+
+### Conversational AI with LangChain, Groq, and Message History
 
 Overview
 This project demonstrates how to build a stateful conversational AI using LangChain and Groq LLMs.
@@ -156,3 +158,158 @@ Use Cases
 • Agentic AI workflows
 • Interview-ready LangChain projects
 • Memory-aware chatbots
+
+## VECTOR RETRIEVER
+
+VectorStores, Retrievers, and RAG
+
+VectorStores
+from langchain_chroma import Chroma
+
+vectorstore = Chroma.from_documents(
+documents,
+embedding=embeddings
+)
+What it is
+A VectorStore stores documents as numerical embeddings so that semantic (meaning-based) search can be performed.
+Why it is used
+• Converts text into vectors using embeddings
+• Enables similarity-based retrieval instead of keyword search
+• Forms the foundation of Retrieval-Augmented Generation (RAG)
+
+---
+
+Similarity Search
+vectorstore.similarity_search("cat")
+What it does
+• Finds the most semantically similar documents to the query "cat"
+Why it matters
+• Allows the system to retrieve relevant context even if exact words don’t match
+• Improves answer quality compared to plain LLM prompting
+
+---
+
+Async Similarity Search
+await vectorstore.asimilarity_search("cat")
+What it does
+• Performs similarity search asynchronously
+Why it is useful
+• Improves performance in web apps or APIs
+• Prevents blocking during I/O-heavy operations
+• Essential for scalable, production-grade systems
+
+---
+
+Similarity Search with Scores
+vectorstore.similarity_search_with_score("cats")
+What it does
+• Returns documents along with similarity scores
+Why it is useful
+• Helps evaluate relevance
+• Useful for filtering, ranking, or debugging retrieval quality
+
+---
+
+Creating a Runnable Retriever Manually
+from langchain_core.runnables import RunnableLambda
+
+retriever = RunnableLambda(
+vectorstore.similarity_search
+).bind(k=1)
+
+retriever.batch(["cat", "dog"])
+What this does
+• Wraps similarity_search into a Runnable
+• Fixes k=1 using .bind()
+• Enables batch execution
+Why this is important
+• VectorStores are not Runnable
+• LCEL (LangChain Expression Language) requires Runnables
+• This allows retrieval to be composed into chains and pipelines
+
+---
+
+Using a Built-in Retriever (Recommended)
+retriever = vectorstore.as_retriever(
+search_type="similarity",
+search_kwargs={"k": 1}
+)
+
+retriever.batch(["cat", "dog"])
+What it is
+• A standard LangChain Retriever abstraction
+Why it is preferred
+• Cleaner and more maintainable
+• Implements invoke, batch, ainvoke, abatch
+• Fully compatible with LCEL chains
+
+---
+
+RAG (Retrieval-Augmented Generation)
+Prompt Definition
+from langchain_core.prompts import ChatPromptTemplate
+
+message = """
+Answer the question using the provided context only.
+
+{question}
+Context:
+{context}
+"""
+
+prompt = ChatPromptTemplate.from_messages([
+("human", message)
+])
+Why
+• Ensures the LLM answers only using retrieved documents
+• Prevents hallucinations
+• Enforces grounded responses
+
+---
+
+RunnablePassthrough
+from langchain_core.runnables import RunnablePassthrough
+What it does
+• Passes the original user question unchanged into the chain
+Why it is needed
+• Allows multiple inputs (question, context) in LCEL
+• Keeps the question available at inference time
+
+---
+
+RAG Chain Composition
+rag_chain = {
+"context": retriever,
+"question": RunnablePassthrough()
+} | prompt | llm
+How this works
+
+1. User question enters the chain
+2. Retriever fetches relevant context
+3. Prompt formats question + context
+4. LLM generates an answer grounded in retrieved data
+
+---
+
+Invoking the RAG Chain
+response = rag_chain.invoke("tell me about dogs")
+print(response.content)
+Why this is powerful
+• Combines retrieval + reasoning
+• Produces accurate, context-aware answers
+• Core pattern behind production RAG systems
+
+---
+
+Key Concepts Demonstrated
+• VectorStores vs Retrievers
+• Sync and async retrieval
+• Runnable abstraction
+• Batch processing
+• LCEL pipelines
+• Retrieval-Augmented Generation (RAG)
+
+---
+
+Why This Matters
+This implementation shows how raw vector stores can be converted into runnable retrievers and composed into LCEL pipelines, enabling scalable, context-aware RAG systems with clean separation between retrieval, prompting, and generation.
